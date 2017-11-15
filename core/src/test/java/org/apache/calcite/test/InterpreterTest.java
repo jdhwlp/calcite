@@ -205,6 +205,22 @@ public class InterpreterTest {
         "[Ringo, 1]");
   }
 
+  @Test public void testAggregateOverAggregateGroup() throws Exception {
+	    rootSchema.add("beatles", new ScannableTableTest.BeatlesTable());
+	    SqlNode parse =
+	        planner.parse("select min(\"c\") from (select \"j\", count(*) as \"c\" from \"beatles\" group by \"j\")");
+
+	    SqlNode validate = planner.validate(parse);
+	    RelNode convert = planner.rel(validate).rel;
+
+	    final Interpreter interpreter = new Interpreter(dataContext, convert);
+	    assertRowsUnordered(interpreter,
+	        "[George, 1]",
+	        "[Paul, 1]",
+	        "[John, 1]",
+	        "[Ringo, 1]");
+	  }
+  
   @Test public void testAggregateGroupFilter() throws Exception {
     rootSchema.add("beatles", new ScannableTableTest.BeatlesTable());
     final String sql = "select \"j\",\n"
